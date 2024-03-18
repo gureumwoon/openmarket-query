@@ -4,19 +4,23 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from "react-router-dom";
 import { Provider } from "react-redux";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import store from "./redux/configStore";
 import ScrollToTop from './components/ScrollToTop';
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement);
+const queryClient = new QueryClient()
 root.render(
   <>
-    <Provider store={store}>
-      <BrowserRouter>
-        <ScrollToTop>
-          <App />
-        </ScrollToTop>
-      </BrowserRouter>
-    </Provider>
+    <QueryClientProvider client={queryClient}>
+      <Provider store={store}>
+        <BrowserRouter>
+          <ScrollToTop>
+            <App />
+          </ScrollToTop>
+        </BrowserRouter>
+      </Provider>
+    </QueryClientProvider>
   </>
 );
 
