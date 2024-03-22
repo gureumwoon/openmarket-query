@@ -1,15 +1,19 @@
+import { InfiniteQueryObserverResult } from '@tanstack/react-query';
 import { useCallback, useEffect, useRef } from 'react';
 
-function useInfiniteScroll(onIntersect: IntersectionObserverCallback) {
+type IntersectionObserverProps = {
+    hasNextPage: boolean | false;
+    fetchNextPage: () => Promise<InfiniteQueryObserverResult>
+}
+
+function useInfiniteScroll({ hasNextPage, fetchNextPage }: IntersectionObserverProps) {
     const ref = useRef<HTMLDivElement>(null);
 
-    const handleIntersect = useCallback(([entry]: IntersectionObserverEntry[], observer: IntersectionObserver) => {
-        if (entry?.isIntersecting) {
-            observer.unobserve(entry.target);
-            onIntersect([entry], observer);
-            // observer.observe(entry.target)
+    const handleIntersect: IntersectionObserverCallback = useCallback(([entry]: IntersectionObserverEntry[], observer: IntersectionObserver) => {
+        if (entry?.isIntersecting && hasNextPage) {
+            fetchNextPage();
         }
-    }, [onIntersect]);
+    }, [fetchNextPage, hasNextPage]);
 
     useEffect(() => {
         let observer: IntersectionObserver;
