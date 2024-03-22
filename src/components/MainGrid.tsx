@@ -1,45 +1,40 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import styled from "styled-components";
 import useInfiniteScroll from '../hooks/use-infinitescroll';
-import { api } from '../shared/api';
+import { apis } from '../shared/api';
 import { Product } from './types/product';
 import LazyLoadingImage from './LazyLoading';
 import PlaceholderImg from '../assets/images/placeholderImg.svg';
+import { useInfiniteQuery } from '@tanstack/react-query';
 
 function MainGrid() {
     const navigate = useNavigate()
-    const [page, setPage] = useState<number>(1)
-    const [list, setList] = useState<Product[]>([])
-    const [moreData, setMoreData] = useState<boolean>(true)
-    console.log(list)
 
-    const getData = async () => {
-        try {
-            const response = await api.get(`/products/?page=${page}`);
-            const newData = response.data.results;
-            setList((prev) => prev.concat(newData));
-            setPage((prev) => prev + 1);
-        } catch (error) {
-            setMoreData(false);
-        }
-    };
+    const { data, fetchNextPage, hasNextPage } = useInfiniteQuery<Product[], Error>({
+        queryKey: ['products'],
+        queryFn: async ({ pageParam = 1 }) => { // pageParam의 형식을 직접 지정
+            const response = await apis.getProduct(pageParam as number);
+            return response.data.results;
+        },
+        getNextPageParam: (lastPage, pages): number | false => {
+            const nextPage = pages.length + 1;
+            return lastPage.length === 0 ? false : nextPage;
+        },
+        initialPageParam: 1
+    });
 
-    const target = useInfiniteScroll(async () => {
-        await getData()
+    const target = useInfiniteScroll({
+        hasNextPage,
+        fetchNextPage,
     })
 
     return (
         <Container>
             {
-                list.map((p, i) => {
+                data?.pages.flat().map((p, i) => {
                     return <div key={p.product_id}>
                         <LazyLoadingImage
-                            src={
-                                // 'https://d2a0m4zl4hi5gz.cloudfront.net/dev/tumbler-mint.jpg?w=380&h=380'
-                                `https://d2a0m4zl4hi5gz.cloudfront.net/dev/${(p.image).substring((p.image).lastIndexOf("/") + 1).split('_')[0]}.jpg?w=380&h=380`
-                                // p.image
-                            }
+                            src={p.image}
                             onError={(e: React.ChangeEvent<HTMLImageElement>) => {
                                 e.target.onerror = null; // 에러 핸들러 무한 루프 방지
                                 e.target.src = p.image // 이미지 로드 실패 시 p.image 사용
@@ -57,7 +52,7 @@ function MainGrid() {
                     </div>
                 })
             }
-            {moreData ? <div ref={target}></div> : null}
+            {hasNextPage ? <div ref={target}></div> : null}
         </Container>
     )
 }
