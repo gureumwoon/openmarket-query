@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
-import { getOneProduct } from '../redux/modules/productSlice';
 import { addCart, getCartList } from '../redux/modules/cartSlice';
 //components
 import Nav from '../components/Nav'
@@ -43,7 +42,6 @@ function ProductDetail() {
     })
 
     useEffect(() => {
-        dispatch(getOneProduct(finalId))
         dispatch(getCartList())
     }, [dispatch, finalId])
 
