@@ -12,6 +12,8 @@ import UserModal from '../components/UserModal';
 import Button from '../elements/Button';
 //helpers
 import ModalPortal from '../helpers/Portal';
+import { useQuery } from '@tanstack/react-query';
+import { apis } from '../shared/api';
 
 function ProductDetail() {
     const { id } = useParams();
@@ -19,11 +21,9 @@ function ProductDetail() {
     const finalId = parsedId || 0;
     const dispatch = useAppDispatch()
     const navigate = useNavigate()
-    const product = useAppSelector((state) => state.product.productOne)
-    const product_stock = product?.stock
     const cartList = useAppSelector((state) => state.cart.cartList)
     const cartItemId = cartList.map((c) => c.product_id)
-    const cartItem = cartList.find((c) => c.product_id === product?.product_id)
+    const cartItem = cartList.find((c) => c.product_id === finalId)
     const isLogin = localStorage.getItem("token")
     const userType = localStorage.getItem("type")
 
@@ -33,6 +33,14 @@ function ProductDetail() {
 
     const tabMenu = ["버튼", "리뷰", "Q&A", "반품/교환정보"]
     const itemDupCheck = true;
+
+    const { data: product } = useQuery({
+        queryKey: ['oneProduct', finalId],
+        queryFn: async () => {
+            const res = await apis.getOneProduct(finalId)
+            return res.data
+        }
+    })
 
     useEffect(() => {
         dispatch(getOneProduct(finalId))
@@ -46,7 +54,7 @@ function ProductDetail() {
     }
 
     const handlePlus = () => {
-        if (quantity <= (product_stock ?? 0) - 1) {
+        if (quantity <= (product?.stock ?? 0) - 1) {
             setQuantity(quantity + 1)
         }
     }
