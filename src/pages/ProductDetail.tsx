@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
-import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
+import { useState } from 'react';
+import { useAppDispatch } from '../hooks/reduxHooks';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
-import { addCart, getCartList } from '../redux/modules/cartSlice';
+import { addCart } from '../redux/modules/cartSlice';
 //components
 import Nav from '../components/Nav'
 import Footer from '../components/Footer'
@@ -13,6 +13,7 @@ import Button from '../elements/Button';
 import ModalPortal from '../helpers/Portal';
 import { useQuery } from '@tanstack/react-query';
 import { apis } from '../shared/api';
+import { CartDetail } from '../components/types/product';
 
 function ProductDetail() {
     const { id } = useParams();
@@ -20,9 +21,6 @@ function ProductDetail() {
     const finalId = parsedId || 0;
     const dispatch = useAppDispatch()
     const navigate = useNavigate()
-    const cartList = useAppSelector((state) => state.cart.cartList)
-    const cartItemId = cartList.map((c) => c.product_id)
-    const cartItem = cartList.find((c) => c.product_id === finalId)
     const isLogin = localStorage.getItem("token")
     const userType = localStorage.getItem("type")
 
@@ -34,16 +32,20 @@ function ProductDetail() {
     const itemDupCheck = true;
 
     const { data: product } = useQuery({
-        queryKey: ['oneProduct', finalId],
+        queryKey: ['product', finalId],
         queryFn: async () => {
             const res = await apis.getOneProduct(finalId)
             return res.data
         }
     })
 
-    useEffect(() => {
-        dispatch(getCartList())
-    }, [dispatch, finalId])
+    const { data: carts } = useQuery<CartDetail[]>({
+        queryKey: ['cartList'],
+        queryFn: async () => {
+            const res = await apis.getCart()
+            return res.data.results
+        }
+    })
 
     const handleMinus = () => {
         if (1 < quantity) {
@@ -77,7 +79,9 @@ function ProductDetail() {
         }
     }
 
+    const cartItem = carts?.find((c) => c.product_id === finalId)
     const handleAddCart = () => {
+        const cartItemId = carts?.map((c) => c.product_id)
         const itemData = {
             product_id: (product?.product_id ?? 0),
             quantity: quantity,
@@ -86,10 +90,10 @@ function ProductDetail() {
         if (!isLogin) {
             setModal(2)
         }
-        if (cartItemId.includes(product?.product_id ?? 0) && (cartItem?.quantity ?? 0) + quantity <= (product?.stock ?? 0)) {
+        if (cartItemId?.includes(product?.product_id ?? 0) && (cartItem?.quantity ?? 0) + quantity <= (product?.stock ?? 0)) {
             setModal(1)
         }
-        else if (cartList === null || !cartItemId.includes(product?.product_id ?? 0) || (cartItem?.quantity ?? 0) + quantity > (product?.stock ?? 0)) {
+        else if (carts === null || !cartItemId?.includes(product?.product_id ?? 0) || (cartItem?.quantity ?? 0) + quantity > (product?.stock ?? 0)) {
             dispatch(addCart(itemData));
         }
     }
