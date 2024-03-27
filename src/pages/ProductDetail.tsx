@@ -1,8 +1,6 @@
 import { useState } from 'react';
-import { useAppDispatch } from '../hooks/reduxHooks';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from 'styled-components';
-import { addCart } from '../redux/modules/cartSlice';
 //components
 import Nav from '../components/Nav'
 import Footer from '../components/Footer'
@@ -11,15 +9,14 @@ import UserModal from '../components/UserModal';
 import Button from '../elements/Button';
 //helpers
 import ModalPortal from '../helpers/Portal';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { apis } from '../shared/api';
-import { CartDetail } from '../components/types/product';
+import { AddCart, CartDetail } from '../components/types/product';
 
 function ProductDetail() {
     const { id } = useParams();
     const parsedId = id ? parseInt(id, 10) : undefined;
     const finalId = parsedId || 0;
-    const dispatch = useAppDispatch()
     const navigate = useNavigate()
     const isLogin = localStorage.getItem("token")
     const userType = localStorage.getItem("type")
@@ -46,6 +43,33 @@ function ProductDetail() {
             return res.data.results
         }
     })
+
+    interface CustomError extends Error {
+        response?: any;
+    }
+
+    const itemData = {
+        product_id: (product?.product_id ?? 0),
+        quantity: quantity,
+        check: itemDupCheck
+    }
+    const addCartItem = useMutation<AddCart, CustomError, AddCart>({
+        mutationFn: async () => {
+            const res = await apis.addCart(itemData)
+            return res.data
+        },
+        onSuccess: () => {
+            setModal(3)
+        },
+        onError: (error) => {
+            console.log("장바구니에러", error);
+            if (error.response.status === 406) {
+                window.alert(error.response.data.FAIL_message);
+            }
+            throw error;
+        }
+    })
+
 
     const handleMinus = () => {
         if (1 < quantity) {
@@ -79,14 +103,9 @@ function ProductDetail() {
         }
     }
 
-    const cartItem = carts?.find((c) => c.product_id === finalId)
     const handleAddCart = () => {
+        const cartItem = carts?.find((c) => c.product_id === finalId)
         const cartItemId = carts?.map((c) => c.product_id)
-        const itemData = {
-            product_id: (product?.product_id ?? 0),
-            quantity: quantity,
-            check: itemDupCheck
-        }
         if (!isLogin) {
             setModal(2)
         }
@@ -94,18 +113,7 @@ function ProductDetail() {
             setModal(1)
         }
         else if (carts === null || !cartItemId?.includes(product?.product_id ?? 0) || (cartItem?.quantity ?? 0) + quantity > (product?.stock ?? 0)) {
-            dispatch(addCart(itemData));
-        }
-    }
-
-    const modalAddCart = () => {
-        const itemData = {
-            product_id: (product?.product_id ?? 0),
-            quantity: quantity,
-            check: itemDupCheck
-        }
-        if ((cartItem?.quantity ?? 0) + quantity <= (product?.stock ?? 0) || (cartItem?.quantity ?? 0) + quantity > (product?.stock ?? 0)) {
-            dispatch(addCart(itemData));
+            addCartItem.mutate(itemData)
         }
     }
 
@@ -166,23 +174,35 @@ function ProductDetail() {
                             btn_children_2="예"
                             margin="40px 0 0 0"
                             _onClick={() => setModal(0)}
-                            _onClick2={modalAddCart}
+                            _onClick2={() => navigate('/cart')}
                             _onClickBg={() => setModal(0)}
                         /> :
-                        modal === 2 &&
-                        <UserModal modal_to_check
-                            _disabled={true}
-                            children2="로그인이 필요한 서비스입니다."
-                            children3="로그인 하시겠습니까?"
-                            btn_children_1="아니오"
-                            btn_children_2="예"
-                            margin="30px 0 0 0"
-                            _onClick={() => setModal(0)}
-                            _onClick2={() => {
-                                navigate("/login")
-                            }}
-                            _onClickBg={() => setModal(0)}
-                        />
+                        modal === 2 ?
+                            <UserModal modal_to_check
+                                _disabled={true}
+                                children2="로그인이 필요한 서비스입니다."
+                                children3="로그인 하시겠습니까?"
+                                btn_children_1="아니오"
+                                btn_children_2="예"
+                                margin="30px 0 0 0"
+                                _onClick={() => setModal(0)}
+                                _onClick2={() => {
+                                    navigate("/login")
+                                }}
+                                _onClickBg={() => setModal(0)}
+                            /> :
+                            modal === 3 &&
+                            <UserModal modal_to_check
+                                display="none"
+                                children2="장바구니에 추가되었습니다."
+                                children3="장바구니로 이동하시겠습니까?"
+                                btn_children_1="아니오"
+                                btn_children_2="예"
+                                margin="40px 0 0 0"
+                                _onClick={() => setModal(0)}
+                                _onClick2={() => navigate('/cart')}
+                                _onClickBg={() => setModal(0)}
+                            />
                 }
             </ModalPortal>
         </div>
