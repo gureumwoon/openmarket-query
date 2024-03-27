@@ -1,4 +1,4 @@
-import { AddCart, CartDetail, ModifyCartQuantity } from "../../components/types/product";
+import { CartDetail, ModifyCartQuantity } from "../../components/types/product";
 import { apis } from "../../shared/api";
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
@@ -9,37 +9,6 @@ interface CartInit {
 const initialState: CartInit = {
     cartList: [],
 }
-
-// 장바구니 상품 추가
-export const addCart = createAsyncThunk(
-    "cart/addCart",
-    async (data: AddCart) => {
-        try {
-            const res = await apis.addCart(data);
-            return res.data;
-        } catch (error: any) {
-            console.log("장바구니에러", error);
-            if (error.response.status === 406) {
-                window.alert(error.response.data.FAIL_message);
-            }
-            throw error;
-        }
-    }
-);
-
-// 장바구니 목록 불러오기
-export const getCartList = createAsyncThunk(
-    "cart/getCartList",
-    async () => {
-        try {
-            const res = await apis.getCart()
-            return res.data.results
-        } catch (error) {
-            console.log("장바구니에러", error);
-            throw error;
-        }
-    }
-)
 
 // 장바구니 개별 아이템
 export const getCartItem = createAsyncThunk(
@@ -104,9 +73,6 @@ const cartSlice = createSlice({
     reducers: {},
     extraReducers: (builder) => {
         builder
-            .addCase(getCartList.fulfilled, (state, action) => {
-                state.cartList = action.payload;
-            })
             .addCase(getCartItem.fulfilled, (state, action) => {
                 state.cartList = action.payload;
             })
