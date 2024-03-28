@@ -5,6 +5,7 @@ import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from "react-router-dom";
 import { Provider } from "react-redux";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import store from "./redux/configStore";
 import ScrollToTop from './components/ScrollToTop';
 
@@ -17,6 +18,7 @@ root.render(
         <BrowserRouter>
           <ScrollToTop>
             <App />
+            <ReactQueryDevtools initialIsOpen={true} />
           </ScrollToTop>
         </BrowserRouter>
       </Provider>
