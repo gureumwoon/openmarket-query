@@ -9,11 +9,11 @@ import UserModal from '../components/UserModal';
 import Button from '../elements/Button';
 //helpers
 import ModalPortal from '../helpers/Portal';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQueries } from '@tanstack/react-query';
 import { apis } from '../shared/api';
 import { AddCart, CartDetail } from '../components/types/product';
 
-function ProductDetail() {
+function ProductDetail({ queryClient }: any) {
     const { id } = useParams();
     const parsedId = id ? parseInt(id, 10) : undefined;
     const finalId = parsedId || 0;
@@ -28,21 +28,30 @@ function ProductDetail() {
     const tabMenu = ["버튼", "리뷰", "Q&A", "반품/교환정보"]
     const itemDupCheck = true;
 
-    const { data: product } = useQuery({
-        queryKey: ['product', finalId],
-        queryFn: async () => {
-            const res = await apis.getOneProduct(finalId)
-            return res.data
-        }
+    const results = useQueries({
+        queries: [
+            {
+                queryKey: ['product', finalId],
+                queryFn: async () => {
+                    const res = await apis.getOneProduct(finalId)
+                    return res.data
+                },
+            },
+            {
+                queryKey: ['cartList'],
+                queryFn: async () => {
+                    const res = await apis.getCart()
+                    return res.data.results
+                }
+            }
+        ]
     })
 
-    const { data: carts } = useQuery<CartDetail[]>({
-        queryKey: ['cartList'],
-        queryFn: async () => {
-            const res = await apis.getCart()
-            return res.data.results
-        }
-    })
+    const productQuery = results[0];
+    const cartQuery = results[1];
+
+    const product = productQuery.isLoading ? null : productQuery.data;
+    const carts = cartQuery.isLoading ? null : cartQuery.data;
 
     interface CustomError extends Error {
         response?: any;
@@ -59,6 +68,7 @@ function ProductDetail() {
             return res.data
         },
         onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: 'cartList' })
             setModal(3)
         },
         onError: (error) => {
@@ -78,7 +88,7 @@ function ProductDetail() {
     }
 
     const handlePlus = () => {
-        if (quantity <= (product?.stock ?? 0) - 1) {
+        if (quantity <= (product.stock ?? 0) - 1) {
             setQuantity(quantity + 1)
         }
     }
@@ -90,22 +100,22 @@ function ProductDetail() {
             navigate("/payment", {
                 state: {
                     item: product,
-                    product_id: product?.product_id,
+                    product_id: product.product_id,
                     quantity: quantity,
-                    product_image: product?.image,
-                    product_name: product?.product_name,
-                    shipping_fee: product?.shipping_fee,
-                    store_name: product?.store_name,
+                    product_image: product.image,
+                    product_name: product.product_name,
+                    shipping_fee: product.shipping_fee,
+                    store_name: product.store_name,
                     order_kind: "direct_order",
-                    total_price: (product?.price ?? 0 * quantity) + (product?.shipping_fee ?? 0)
+                    total_price: (product.price ?? 0 * quantity) + (product.shipping_fee ?? 0)
                 }
             })
         }
     }
 
     const handleAddCart = () => {
-        const cartItem = carts?.find((c) => c.product_id === finalId)
-        const cartItemId = carts?.map((c) => c.product_id)
+        const cartItem = carts?.find((c: CartDetail) => c.product_id === finalId)
+        const cartItemId = carts?.map((c: CartDetail) => c.product_id)
         if (!isLogin) {
             setModal(2)
         }
