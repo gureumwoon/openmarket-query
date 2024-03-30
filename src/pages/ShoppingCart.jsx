@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
 import styled from "styled-components";
-import { getProduct } from '../redux/modules/productSlice';
 import { deleteAllItem, deleteCartItem, getCartList } from '../redux/modules/cartSlice';
 // Components
 import Nav from '../components/Nav';
@@ -12,8 +11,10 @@ import Footer from '../components/Footer';
 // Element
 import Button from '../elements/Button';
 import DeleteIcon from '../assets/images/icon-delete.svg';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { apis } from '../shared/api';
 
-function ShoppingCart({ itemCount }) {
+function ShoppingCart() {
     const [checkList, setCheckList] = useState([])
     const [modal, setModal] = useState(0);
     const [isCheck, setIsCheck] = useState(false)
@@ -24,18 +25,39 @@ function ShoppingCart({ itemCount }) {
     const isLogin = localStorage.getItem("token")
     const cart = useAppSelector((state) => state.cart.cartList)
 
-    const productList = useAppSelector((state) => state.product.products)
-    const pageNumbers = [];
-    for (let i = 1; i <= Math.ceil(itemCount / 15); i++) {
-        pageNumbers.push(i);
-    }
-    pageNumbers.shift()
+    // totalCoutn data 가져오기.
+    const { data: totalCount } = useQuery({
+        queryKey: ['totalCount'],
+        queryFn: async () => {
+            const response = await apis.getProduct(1)
+            return response.data.count;
+        }
+    })
+
+    // totalPage 계산.
+    const totalPage = Math.ceil(totalCount);
+
+    // 페이지별로 데이터 가져오기.
+    const { data: productList } = useInfiniteQuery({
+        queryKey: ['products'],
+        queryFn: async ({ pageParam = 1 }) => {
+            const response = await apis.getProduct(pageParam);
+            return response.data.results;
+        },
+        getNextPageParam: (pages) => {
+            if (pages.length < totalPage) {
+                return pages.length + 1;
+            }
+            return false;
+        },
+        initialPageParam: 1
+    })
 
     const quantityList = cart.map((q) => q.quantity)
     const cartId = cart.map((c) => c.product_id)
     const checkedCart = cart.filter((c, i) => checkList.includes(c.product_id))
-    const item = productList.filter((p, i) => cartId.includes(p.product_id))
-    const checkedProduct = item.filter((c, i) => checkList.includes(c.product_id))
+    const item = productList?.pages.flat().filter((p, i) => cartId.includes(p.product_id))
+    const checkedProduct = item?.filter((c, i) => checkList.includes(c.product_id))
     const checkCartItem = cart.filter((p, i) => checkList.includes(p.product_id))
     const checkCartItemId = checkCartItem.map((c) => c.cart_item_id)
 
@@ -85,7 +107,7 @@ function ShoppingCart({ itemCount }) {
     ) : 0
 
     // 배송 합계 구하기
-    checkedProduct.map((p) =>
+    checkedProduct?.map((p) =>
         shippingFee.push(p.length === 0 ? 0 : p.shipping_fee)
     )
 
@@ -101,11 +123,11 @@ function ShoppingCart({ itemCount }) {
         totalQuantity.push(c.quantity)
     )
 
-    item.map((p, i) =>
+    item?.map((p, i) =>
         totalPrice.push(item.find((a, i) => p.product_id === cart[i].product_id)?.price)
     )
 
-    item.map((p, i) =>
+    item?.map((p, i) =>
         totalShippingFee.push(item.find((a, i) => p.product_id === cart[i]?.product_id)?.shipping_fee)
     )
 
@@ -151,27 +173,6 @@ function ShoppingCart({ itemCount }) {
         dispatch(getCartList())
     }, [dispatch])
 
-
-    // 페이지별로 데이터 가져오기
-    useEffect(() => {
-        if (itemCount > 1 && productList.length < itemCount) {
-            pageNumbers.map((p) => {
-                return dispatch(getProduct(p))
-            })
-        } else if (itemCount <= 1) {
-            dispatch(getProduct(1))
-        }
-    }, [dispatch, itemCount])
-
-    // useEffect(() => {
-    //     api.get(`/products/?page=${page}`).then((res) => {
-    //         setList((prev) => prev.concat(res.data.results))//리스트 추가
-    //         setPage(prev => prev + 1)
-    //     }).catch((error) => {
-    //         return;
-    //     })
-    // }, [page])
-
     return (
         <div>
             <Nav
@@ -206,7 +207,7 @@ function ShoppingCart({ itemCount }) {
                                     return <CartGrid
                                         key={c.product_id}
                                         {...c}
-                                        item={item.find((p, i) => c.product_id === p.product_id)}
+                                        item={item?.find((p, i) => c.product_id === p.product_id)}
                                         quantityList={quantityList[i]}
                                         quantity={quantity[i]}
                                         _onClickPlus={() => setModal(1)}
