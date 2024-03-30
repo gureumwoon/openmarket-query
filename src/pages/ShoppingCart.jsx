@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
+import { useAppDispatch } from '../hooks/reduxHooks';
 import styled from "styled-components";
-import { deleteAllItem, deleteCartItem, getCartList } from '../redux/modules/cartSlice';
+import { deleteAllItem, deleteCartItem } from '../redux/modules/cartSlice';
 // Components
 import Nav from '../components/Nav';
 import CartCheckBox from '../components/CartCheckBox';
@@ -23,7 +23,6 @@ function ShoppingCart() {
     const location = useLocation();
     const dispatch = useAppDispatch()
     const isLogin = localStorage.getItem("token")
-    const cart = useAppSelector((state) => state.cart.cartList)
 
     // totalCoutn data 가져오기.
     const { data: totalCount } = useQuery({
@@ -53,13 +52,22 @@ function ShoppingCart() {
         initialPageParam: 1
     })
 
-    const quantityList = cart.map((q) => q.quantity)
-    const cartId = cart.map((c) => c.product_id)
-    const checkedCart = cart.filter((c, i) => checkList.includes(c.product_id))
+    // cartList 가져오기.
+    const { data: carts } = useQuery({
+        queryKey: ['cartsList'],
+        queryFn: async () => {
+            const res = await apis.getCart()
+            return res.data.results
+        }
+    })
+
+    const quantityList = carts?.map((q) => q.quantity)
+    const cartId = carts?.map((c) => c.product_id)
+    const checkedCart = carts?.filter((c, i) => checkList.includes(c.product_id))
     const item = productList?.pages.flat().filter((p, i) => cartId.includes(p.product_id))
     const checkedProduct = item?.filter((c, i) => checkList.includes(c.product_id))
-    const checkCartItem = cart.filter((p, i) => checkList.includes(p.product_id))
-    const checkCartItemId = checkCartItem.map((c) => c.cart_item_id)
+    const checkCartItem = carts?.filter((p, i) => checkList.includes(p.product_id))
+    const checkCartItemId = checkCartItem?.map((c) => c.cart_item_id)
 
     const quantity = [];
     const price = [];
@@ -69,7 +77,7 @@ function ShoppingCart() {
     const checkAllBox = (checked) => {
         if (checked) {
             const allCheck = []
-            cart.forEach((cartItem) => allCheck.push(cartItem.product_id))
+            carts?.forEach((cartItem) => allCheck.push(cartItem.product_id))
             setCheckList(allCheck)
             setIsCheck(true)
         } else {
@@ -97,7 +105,7 @@ function ShoppingCart() {
     )
 
     // 제품의 가격을 cart리스트의 quantity(수량)만큼 곱해서 배열에 넣기
-    for (let i = 0; i < checkedCart.length; i++) {
+    for (let i = 0; i < checkedCart?.length; i++) {
         price2.push(quantity[i] * price[i])
     }
 
@@ -119,19 +127,19 @@ function ShoppingCart() {
     const totalPrice2 = []
     const totalShippingFee = []
 
-    cart.map((c, i) =>
+    carts?.map((c, i) =>
         totalQuantity.push(c.quantity)
     )
 
     item?.map((p, i) =>
-        totalPrice.push(item.find((a, i) => p.product_id === cart[i].product_id)?.price)
+        totalPrice.push(item.find((a, i) => p.product_id === carts[i].product_id)?.price)
     )
 
     item?.map((p, i) =>
-        totalShippingFee.push(item.find((a, i) => p.product_id === cart[i]?.product_id)?.shipping_fee)
+        totalShippingFee.push(item.find((a, i) => p.product_id === carts[i]?.product_id)?.shipping_fee)
     )
 
-    for (let i = 0; i < cart.length; i++) {
+    for (let i = 0; i < carts?.length; i++) {
         totalPrice2.push(totalQuantity[i] * totalPrice[i])
     }
 
@@ -142,7 +150,7 @@ function ShoppingCart() {
     const difference = resultSum2 - resultSum // 전체 상품의 총액과 선택한 상품 총액의 차
 
     const handleDeleteAll = () => {
-        if (checkList.length === cart.length) {
+        if (checkList.length === carts?.length) {
             dispatch(deleteAllItem())
         } else if (checkList.length === 0) {
             window.alert("삭제할 상품을 선택해주세요")
@@ -169,10 +177,6 @@ function ShoppingCart() {
         }
     }
 
-    useEffect(() => {
-        dispatch(getCartList())
-    }, [dispatch])
-
     return (
         <div>
             <Nav
@@ -188,7 +192,7 @@ function ShoppingCart() {
                         margin="0 0 0 30px"
                         width="30%"
                         onChange={(e) => checkAllBox(e.target.checked)}
-                        checked={checkList.length === cart.length && 0 < checkList.length && 0 < cart.length ? true : false}
+                        checked={checkList.length === carts?.length && 0 < checkList.length && 0 < carts?.length ? true : false}
                     />
                     <p>상품정보</p>
                     <p>수량</p>
@@ -196,14 +200,14 @@ function ShoppingCart() {
                     <img className="icon-delete" src={DeleteIcon} alt="" onClick={handleDeleteAll} />
                 </div>
                 {
-                    cart && cart.length === 0 ?
+                    carts && carts?.length === 0 ?
                         <div className='empty-cart'>
                             <p>장바구니에 담긴 상품이 없습니다.</p>
                             <p>원하는 상품을 장바구니에 담아보세요!</p>
                         </div> :
                         <>
                             {
-                                cart && cart.map((c, i) => {
+                                carts && carts?.map((c, i) => {
                                     return <CartGrid
                                         key={c.product_id}
                                         {...c}
