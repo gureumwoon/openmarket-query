@@ -18,7 +18,7 @@ function MainGrid() {
         },
         getNextPageParam: (lastPage, pages): number | false => {
             const nextPage = pages.length + 1;
-            return lastPage.length === 0 ? false : nextPage;
+            return lastPage?.length === 0 ? false : nextPage;
         },
         initialPageParam: 1
     });
@@ -32,22 +32,22 @@ function MainGrid() {
         <Container>
             {
                 data?.pages.flat().map((p, i) => {
-                    return <div key={p.product_id}>
+                    return <div key={p?.product_id}>
                         <LazyLoadingImage
-                            src={p.image}
+                            src={p?.image}
                             onError={(e: React.ChangeEvent<HTMLImageElement>) => {
                                 e.target.onerror = null; // 에러 핸들러 무한 루프 방지
                                 e.target.src = p.image // 이미지 로드 실패 시 p.image 사용
                                 e.target.width = 380;
                                 e.target.height = 380;
                             }}
-                            alt={p.product_name}
-                            onClick={() => navigate(`/detail/${p.product_id}`)}
+                            alt={p?.product_name}
+                            onClick={() => navigate(`/detail/${p?.product_id}`)}
                             placeholderImg={PlaceholderImg}
                         />
-                        <p className='product-name'>{p.store_name}</p>
-                        <p className='product'>{p.product_name}</p>
-                        <span className='product-price'>{p.price.toLocaleString()}</span>
+                        <p className='product-name'>{p?.store_name}</p>
+                        <p className='product'>{p?.product_name}</p>
+                        <span className='product-price'>{p?.price?.toLocaleString()}</span>
                         <span>원</span>
                     </div>
                 })
