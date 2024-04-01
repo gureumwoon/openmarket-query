@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAppDispatch } from '../hooks/reduxHooks';
 import styled from "styled-components";
-import { deleteAllItem, deleteCartItem } from '../redux/modules/cartSlice';
+import { deleteCartItem } from '../redux/modules/cartSlice';
 // Components
 import Nav from '../components/Nav';
 import CartCheckBox from '../components/CartCheckBox';
@@ -11,13 +11,14 @@ import Footer from '../components/Footer';
 // Element
 import Button from '../elements/Button';
 import DeleteIcon from '../assets/images/icon-delete.svg';
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { QueryClient, useMutation, useQuery } from '@tanstack/react-query';
 import { apis } from '../shared/api';
 
 function ShoppingCart() {
     const [checkList, setCheckList] = useState([])
     const [modal, setModal] = useState(0);
     const [isCheck, setIsCheck] = useState(false)
+    const queryClient = new QueryClient();
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -34,22 +35,21 @@ function ShoppingCart() {
     })
 
     // totalPage 계산.
-    const totalPage = Math.ceil(totalCount);
+    const totalPage = Math.ceil(totalCount / 15);
 
     // 페이지별로 데이터 가져오기.
-    const { data: productList } = useInfiniteQuery({
+    const { data: productList } = useQuery({
         queryKey: ['products'],
-        queryFn: async ({ pageParam = 1 }) => {
-            const response = await apis.getProduct(pageParam);
-            return response.data.results;
-        },
-        getNextPageParam: (pages) => {
-            if (pages.length < totalPage) {
-                return pages.length + 1;
+        queryFn: async () => {
+            const promises = [];
+            for (let page = 1; page <= totalPage; page++) {
+                promises.push(apis.getProduct(page))
             }
-            return false;
+            const response = await Promise.all(promises);
+            const products = response.flatMap(response => response.data.results);
+            return products;
         },
-        initialPageParam: 1
+        enabled: totalPage > 0,
     })
 
     // cartList 가져오기.
@@ -61,12 +61,24 @@ function ShoppingCart() {
         }
     })
 
+    console.log(carts)
+    // cartList 삭제하기
+    const deleteCartList = useMutation({
+        mutationFn: async () => {
+            const response = await apis.deleteAllItem();
+            return response.data
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['cartList'] })
+        },
+    })
+
     const quantityList = carts?.map((q) => q.quantity)
     const cartId = carts?.map((c) => c.product_id)
     const checkedCart = carts?.filter((c, i) => checkList.includes(c.product_id))
-    const item = productList?.pages.flat().filter((p, i) => cartId.includes(p.product_id))
+    const item = productList?.filter((p, i) => cartId?.includes(p?.product_id))
     const checkedProduct = item?.filter((c, i) => checkList.includes(c.product_id))
-    const checkCartItem = carts?.filter((p, i) => checkList.includes(p.product_id))
+    const checkCartItem = carts?.filter((p, i) => checkList.includes(p?.product_id))
     const checkCartItemId = checkCartItem?.map((c) => c.cart_item_id)
 
     const quantity = [];
@@ -101,7 +113,7 @@ function ShoppingCart() {
     )
 
     checkCartItem && checkCartItem.map((p, i) =>
-        price.push(checkCartItem.length === 0 ? 0 : checkedProduct.find((c, i) => p.product_id === c.product_id).price)
+        price?.push(checkCartItem.length === 0 ? 0 : checkedProduct.find((c, i) => p.product_id === c.product_id)?.price)
     )
 
     // 제품의 가격을 cart리스트의 quantity(수량)만큼 곱해서 배열에 넣기
@@ -151,7 +163,7 @@ function ShoppingCart() {
 
     const handleDeleteAll = () => {
         if (checkList.length === carts?.length) {
-            dispatch(deleteAllItem())
+            deleteCartList.mutate();
         } else if (checkList.length === 0) {
             window.alert("삭제할 상품을 선택해주세요")
         }
