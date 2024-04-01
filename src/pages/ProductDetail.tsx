@@ -9,7 +9,7 @@ import UserModal from '../components/UserModal';
 import Button from '../elements/Button';
 //helpers
 import ModalPortal from '../helpers/Portal';
-import { QueryClient, useMutation, useQueries } from '@tanstack/react-query';
+import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
 import { apis } from '../shared/api';
 import { AddCart, CartDetail } from '../components/types/product';
 
@@ -20,7 +20,7 @@ function ProductDetail() {
     const navigate = useNavigate()
     const isLogin = localStorage.getItem("token")
     const userType = localStorage.getItem("type")
-    const queryClient = new QueryClient();
+    const queryClient = useQueryClient();
 
     const [quantity, setQuantity] = useState(1)
     const [modal, setModal] = useState(0);
