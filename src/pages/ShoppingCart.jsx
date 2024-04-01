@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useAppDispatch } from '../hooks/reduxHooks';
 import styled from "styled-components";
-import { deleteCartItem } from '../redux/modules/cartSlice';
 // Components
 import Nav from '../components/Nav';
 import CartCheckBox from '../components/CartCheckBox';
@@ -11,18 +9,17 @@ import Footer from '../components/Footer';
 // Element
 import Button from '../elements/Button';
 import DeleteIcon from '../assets/images/icon-delete.svg';
-import { QueryClient, useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apis } from '../shared/api';
 
 function ShoppingCart() {
     const [checkList, setCheckList] = useState([])
     const [modal, setModal] = useState(0);
     const [isCheck, setIsCheck] = useState(false)
-    const queryClient = new QueryClient();
+    const queryClient = useQueryClient();
 
     const navigate = useNavigate();
     const location = useLocation();
-    const dispatch = useAppDispatch()
     const isLogin = localStorage.getItem("token")
 
     // totalCoutn data 가져오기.
@@ -71,6 +68,18 @@ function ShoppingCart() {
             await queryClient.invalidateQueries({ queryKey: ['cartList'] });
             await refetchCartList();
         },
+    })
+
+    // cartItem 삭제하기
+    const deleteCartItem = useMutation({
+        mutationFn: async (itemId) => {
+            const res = apis.deleteItem(itemId)
+            return res.data
+        },
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({ queryKey: ['cartList'] });
+            await refetchCartList();
+        }
     })
 
     const quantityList = carts?.map((q) => q.quantity)
@@ -168,7 +177,7 @@ function ShoppingCart() {
             window.alert("삭제할 상품을 선택해주세요")
         }
         else {
-            checkCartItemId.map((c) => dispatch(deleteCartItem(c)))
+            checkCartItemId.map((c) => deleteCartItem.mutate(c))
         }
     }
 
@@ -235,6 +244,7 @@ function ShoppingCart() {
                                         checkedProduct={checkedProduct}
                                         checkCartItem={checkCartItem}
                                         difference={difference}
+                                        refetchCartList={refetchCartList}
                                     />
                                 })
                             }
