@@ -1,8 +1,8 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { useAppDispatch } from '../hooks/reduxHooks';
 import { useNavigate } from 'react-router-dom';
 import styled from "styled-components";
-import { deleteCartItem, modifyCartItem } from '../redux/modules/cartSlice';
+import { modifyCartItem } from '../redux/modules/cartSlice';
 import CartCheckBox from './CartCheckBox';
 import UserModal from './UserModal';
 import Button from '../elements/Button';
@@ -11,15 +11,30 @@ import MinusIcon from "../assets/images/minus-icon_2.svg";
 import PlusIcon from "../assets/images/plus-icon_2.svg";
 import DeleteIcon from '../assets/images/icon-delete.svg';
 import ModalPortal from '../helpers/Portal';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { apis } from '../shared/api';
 
 function CartGrid(props) {
-    const { cart_sum_grid, sum, shippingFeeSum, onChange, checked, isCheck } = props;
+    const { cart_sum_grid, sum, shippingFeeSum, onChange, checked, isCheck, refetchCartList } = props;
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
 
     const [modal, setModal] = useState(0);
     const [itemId, setItemId] = useState("");
     const [count, setCount] = useState(props.quantityList)
+
+    // cartItem 삭제하기
+    const deleteCartItem = useMutation({
+        mutationFn: async (itemId) => {
+            const res = apis.deleteItem(itemId)
+            return res.data
+        },
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({ queryKey: ['cartList'] });
+            await refetchCartList()
+        }
+    })
 
     const cartToPayment = () => {
         if (props.is_active === true && isCheck === true) {
@@ -167,7 +182,7 @@ function CartGrid(props) {
                                     margin="40px 0 0 0"
                                     _onClick={() => setModal(0)}
                                     _onClick2={() => {
-                                        dispatch(deleteCartItem(props.cart_item_id))
+                                        deleteCartItem.mutate(props.cart_item_id)
                                         setModal(0)
                                     }}
                                     _onClickBg={() => setModal(0)}
