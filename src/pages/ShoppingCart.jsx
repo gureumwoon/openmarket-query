@@ -39,37 +39,37 @@ function ShoppingCart() {
 
     // 페이지별로 데이터 가져오기.
     const { data: productList } = useQuery({
-        queryKey: ['products'],
+        queryKey: ['allProduct'],
         queryFn: async () => {
             const promises = [];
             for (let page = 1; page <= totalPage; page++) {
                 promises.push(apis.getProduct(page))
             }
-            const response = await Promise.all(promises);
-            const products = response.flatMap(response => response.data.results);
+            const res = await Promise.all(promises);
+            const products = res.flatMap(response => response.data.results);
+            console.log(products)
             return products;
         },
         enabled: totalPage > 0,
     })
 
     // cartList 가져오기.
-    const { data: carts } = useQuery({
-        queryKey: ['cartsList'],
+    const { data: carts, refetch: refetchCartList } = useQuery({
+        queryKey: ['cartList'],
         queryFn: async () => {
             const res = await apis.getCart()
             return res.data.results
         }
     })
 
-    console.log(carts)
     // cartList 삭제하기
     const deleteCartList = useMutation({
         mutationFn: async () => {
-            const response = await apis.deleteAllItem();
-            return response.data
+            return await apis.deleteAllItem();
         },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['cartList'] })
+        onSuccess: async () => {
+            await queryClient.invalidateQueries({ queryKey: ['cartList'] });
+            await refetchCartList();
         },
     })
 
