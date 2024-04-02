@@ -1,8 +1,6 @@
 import { useState } from 'react'
-import { useAppDispatch } from '../hooks/reduxHooks';
 import { useNavigate } from 'react-router-dom';
 import styled from "styled-components";
-import { modifyCartItem } from '../redux/modules/cartSlice';
 import CartCheckBox from './CartCheckBox';
 import UserModal from './UserModal';
 import Button from '../elements/Button';
@@ -16,7 +14,6 @@ import { apis } from '../shared/api';
 
 function CartGrid(props) {
     const { cart_sum_grid, sum, shippingFeeSum, onChange, checked, isCheck, refetchCartList } = props;
-    const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
 
@@ -35,6 +32,23 @@ function CartGrid(props) {
             await refetchCartList()
         }
     })
+
+    // cartItem 수정하기
+    const modifyCartItem = useMutation({
+        mutationFn: async ({ cartItemId, itemData }) => {
+            const res = await apis.modifyQuantity(cartItemId, itemData)
+            return res.data
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['cartList'] })
+        },
+        onError: (error) => {
+            console.log("장바구니에러", error);
+            throw error;
+        }
+    })
+
+    console.log("modifyCartItem", modifyCartItem)
 
     const cartToPayment = () => {
         if (props.is_active === true && isCheck === true) {
@@ -59,7 +73,7 @@ function CartGrid(props) {
                 is_active: true,
                 // item[i].product_id === cartList[i].product_id
             }
-            dispatch(modifyCartItem(props.cart_item_id, itemData))
+            modifyCartItem.mutate({ cartItemId: props.cart_item_id, itemData })
             navigate("/payment", {
                 state: {
                     item: props.checkedProduct[0],
@@ -165,10 +179,10 @@ function CartGrid(props) {
                                         const itemData = {
                                             product_id: props.product_id,
                                             quantity: count,
-                                            is_active: true //isCheck,
+                                            is_active: true, //isCheck,
                                         }
-                                        const cartItemId = props.cart_item_id
-                                        dispatch(modifyCartItem(cartItemId, itemData))
+                                        console.log("itemData", itemData)
+                                        modifyCartItem.mutate({ cartItemId: props.cart_item_id, itemData })
                                         setModal(0)
                                     }}
                                     _onClickBg={() => setModal(0)}
