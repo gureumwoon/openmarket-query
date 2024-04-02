@@ -1,8 +1,7 @@
 import { useRef, useState } from 'react'
-import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
-import { useParams } from 'react-router-dom';
+import { useAppSelector } from '../hooks/reduxHooks';
+import { useNavigate, useParams } from 'react-router-dom';
 import styled from "styled-components";
-import { modifyProduct, uploadProduct } from '../redux/modules/productSlice';
 //components
 import Nav from '../components/Nav'
 import Button from '../elements/Button';
@@ -14,9 +13,11 @@ import UploadBg from "../assets/images/product-basic-img.png";
 //elements
 import { comma, unComma } from '../elements/Comma';
 import { S3Client, S3ClientConfig, PutObjectCommand } from "@aws-sdk/client-s3";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { apis } from '../shared/api';
 
 function Upload() {
-    const dispatch = useAppDispatch();
+    const navigate = useNavigate();
     const { id } = useParams();
     const fileInput = useRef<HTMLInputElement | null>(null);
     const image = useRef(null);
@@ -24,6 +25,7 @@ function Upload() {
     const sellerItem = useAppSelector((state) => state.product.sellerProducts)
     const modifyItem = sellerItem.filter((s) => s.product_id === Number(id))
     const token = localStorage.getItem("token")
+    const queryClient = useQueryClient();
 
     const [productName, setProductName] = useState(isId ? modifyItem[0]?.product_name : "");
     const [productPrice, setProductPrice] = useState(isId ? modifyItem[0]?.price : "");
@@ -32,6 +34,36 @@ function Upload() {
     const [shippingCheck, setShippingCheck] = useState(isId ? modifyItem[0]?.shipping_method === "DELIVERY" ? false : true : false);
     const [shippingFee, setShippingFee] = useState(isId ? modifyItem[0]?.shipping_fee : "");
     const [productStock, setProductStock] = useState(isId ? modifyItem[0]?.stock : "")
+
+    // product upload하기.
+    const uploadProduct = useMutation({
+        mutationFn: async (formData: FormData) => {
+            const res = await apis.addProduct(formData)
+            return res.data.results
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['products'] })
+        },
+        onError: (error) => {
+            console.log("상품업로드에러", error)
+            throw error;
+        }
+    })
+
+    // product 수정하기.
+    const modifyProduct = useMutation({
+        mutationFn: async ({ id, data }: { id: number, data: FormData }) => {
+            const res = await apis.modifyProduct(id, data);
+            return res.data
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['products'] })
+        },
+        onError: (error) => {
+            console.log("상품수정에러", error);
+            throw error;
+        }
+    })
 
     const handleProductName = (e: React.ChangeEvent<HTMLInputElement>) => {
         setProductName(e.target.value)
@@ -137,32 +169,22 @@ function Upload() {
             formData.append("product_info", `${productName} 입니다.`)
             formData.append("token", token || "")
             console.log(formData)
-            dispatch(uploadProduct(formData))
+            uploadProduct.mutate(formData, {
+                onSuccess: () => {
+                    navigate('/seller-center')
+                }
+            })
         } catch (error) {
             console.log('Error uploading image to S3 or uploading product information:', error);
             throw error;
         }
     }
 
-    // const urlToFile = async (url) => {
-    //     const response = await fetch(url);
-    //     const data = response.blob();
-    //     // const ext = url.split(".").pop()
-    //     const filename = url.split("/").pop()
-    //     const filename2 = filename.split("_").shift()
-    //     const filename3 = filename.split(".").pop()
-    //     const metadata = { type: "image/jpeg" };
-    //     return new File([data], filename2 + "." + filename3, metadata);
-    // }
-
     const handleModify = () => {
 
-        const file = fileInput?.current?.files?.[0];
-        // const file = urlToFile(attachment)
         const formData = new FormData();
 
         formData.append("product_name", productName || "")
-        formData.append("image", file || "");
         formData.append("price", String(productPrice))
         formData.append("shipping_method", shippingCheck ? "PARCEL" : "DELIVERY")
         formData.append("shipping_fee", String(shippingFee))
@@ -173,7 +195,11 @@ function Upload() {
             console.log(pair[0] + ', ' + pair[1]);
         }
 
-        dispatch(modifyProduct({ id: modifyItem[0]?.product_id || 0, data: formData }))
+        modifyProduct.mutate({ id: modifyItem[0]?.product_id || 0, data: formData }, {
+            onSuccess: () => {
+                navigate('/seller-center')
+            }
+        })
     }
 
     return (
