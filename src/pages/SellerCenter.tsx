@@ -1,5 +1,5 @@
 import React, { Fragment, useEffect } from 'react'
-import { useAppDispatch, useAppSelector } from '../hooks/reduxHooks';
+import { useAppDispatch } from '../hooks/reduxHooks';
 import { useNavigate } from 'react-router-dom';
 import styled from "styled-components";
 import { getSellerProduct } from '../redux/modules/productSlice';
@@ -10,12 +10,23 @@ import SellerCenterItem from '../components/SellerCenterItem';
 import Button from '../elements/Button';
 //assets
 import PlusIcon from "../assets/images/icon-plus.svg";
+import { useQuery } from '@tanstack/react-query';
+import { apis } from '../shared/api';
+import { SellerProduct } from '../components/types/product';
 
 
 function SellerCenter() {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
-    const sellerProducts = useAppSelector((state) => state.product.sellerProducts)
+
+    // sellerProducts 가져오기.
+    const { data: sellerProducts } = useQuery<SellerProduct[]>({
+        queryKey: ['sellerProducts'],
+        queryFn: async () => {
+            const res = await apis.getSellerProduct()
+            return res.data.results
+        }
+    })
 
     useEffect(() => {
         dispatch(getSellerProduct())
@@ -34,7 +45,7 @@ function SellerCenter() {
                 </Header>
                 <Section>
                     <div className='button-container'>
-                        <Button seller_tab_button >판매중인 상품({sellerProducts.length})</Button>
+                        <Button seller_tab_button >판매중인 상품({sellerProducts?.length})</Button>
                         <Button seller_tab_button disabled={true} active={true}>주문/배송</Button>
                         <Button seller_tab_button disabled={true} active={true}>문의/리뷰</Button>
                         <Button seller_tab_button disabled={true}>통계</Button>
@@ -48,9 +59,9 @@ function SellerCenter() {
                             <p>삭제</p>
                         </div>
                         {
-                            sellerProducts.map((p, i) => {
+                            sellerProducts?.map((p, i) => {
                                 console.log("p", p)
-                                console.log("p2", sellerProducts[i].product_id)
+                                console.log("p2", sellerProducts[i]?.product_id)
                                 return <Fragment key={i}>
                                     <SellerCenterItem
                                         {...p}
