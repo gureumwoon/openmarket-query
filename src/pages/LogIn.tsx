@@ -1,7 +1,5 @@
 import { KeyboardEvent, useState } from 'react'
-import { useAppDispatch } from '../hooks/reduxHooks';
 import { useNavigate } from 'react-router-dom';
-import { signInUser } from '../redux/modules/userSlice';
 // components
 import styled from "styled-components";
 // elements
@@ -10,6 +8,9 @@ import Button from "../elements/Button";
 import Tab from "../elements/Tab";
 // assets
 import Hodu from "../assets/images/Logo-hodu15.png";
+import { useMutation } from '@tanstack/react-query';
+import { apis } from '../shared/api';
+import { UserLogin } from '../components/types/user';
 
 interface LoginData {
     username: string;
@@ -18,7 +19,6 @@ interface LoginData {
 }
 
 function Login() {
-    const dispatch = useAppDispatch();
     const navigate = useNavigate();
 
     const [tab, setTab] = useState<number>(0)
@@ -29,6 +29,23 @@ function Login() {
     const [pwMessage, setPwMessage] = useState("")
     const [salesIdMessage, setSalesIdMessage] = useState("")
     const [salesPwMessage, setSalesPwMessage] = useState("")
+
+    // 일반 user
+    const signInUser = useMutation({
+        mutationFn: async (loginData: UserLogin) => {
+            const res = await apis.signIn(loginData)
+            return res.data
+        },
+        onSuccess: (data) => {
+            localStorage.setItem("token", data.token);
+            localStorage.setItem("type", data.user_type);
+            localStorage.setItem("id", data.id);
+        },
+        onError: (error: any) => {
+            window.alert(error.response.data.FAIL_Message)
+            throw error
+        }
+    })
 
     const handleLogin = () => {
         const loginData: LoginData = {
@@ -43,7 +60,12 @@ function Login() {
             if (pw === "") {
                 setPwMessage("비밀번호를 입력해주세요")
             }
-            dispatch(signInUser(loginData))
+            signInUser.mutate(loginData, {
+                onSuccess: () => {
+                    window.alert(`환영합니다 ${loginData.username}님 :)`)
+                    navigate('/')
+                }
+            })
         } else if (tab === 1) {
             if (id === "") {
                 setSalesIdMessage("아이디를 입력해주세요")
@@ -51,7 +73,12 @@ function Login() {
             if (pw === "") {
                 setSalesPwMessage("비밀번호를 입력해주세요")
             }
-            dispatch(signInUser(loginData))
+            signInUser.mutate(loginData, {
+                onSuccess: () => {
+                    window.alert(`환영합니다 ${loginData.username}님 :)`)
+                    navigate('/')
+                }
+            })
         }
     }
 
