@@ -1,5 +1,4 @@
 import { useRef, useState } from 'react'
-import { useAppSelector } from '../hooks/reduxHooks';
 import { useNavigate, useParams } from 'react-router-dom';
 import styled from "styled-components";
 //components
@@ -13,8 +12,9 @@ import UploadBg from "../assets/images/product-basic-img.png";
 //elements
 import { comma, unComma } from '../elements/Comma';
 import { S3Client, S3ClientConfig, PutObjectCommand } from "@aws-sdk/client-s3";
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apis } from '../shared/api';
+import { SellerProduct } from '../components/types/product';
 
 function Upload() {
     const navigate = useNavigate();
@@ -22,8 +22,14 @@ function Upload() {
     const fileInput = useRef<HTMLInputElement | null>(null);
     const image = useRef(null);
     const isId = id ? true : false;
-    const sellerItem = useAppSelector((state) => state.product.sellerProducts)
-    const modifyItem = sellerItem.filter((s) => s.product_id === Number(id))
+    const { data: sellerProducts } = useQuery({
+        queryKey: ['sellerProducts'],
+        queryFn: async () => {
+            const res = await apis.getSellerProduct()
+            return res.data.results
+        }
+    })
+    const modifyItem = sellerProducts?.filter((s: SellerProduct) => s.product_id === Number(id))
     const token = localStorage.getItem("token")
     const queryClient = useQueryClient();
 
