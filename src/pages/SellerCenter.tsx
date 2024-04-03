@@ -1,8 +1,7 @@
-import React, { Fragment, useEffect } from 'react'
-import { useAppDispatch } from '../hooks/reduxHooks';
+import React, { Fragment } from 'react'
 import { useNavigate } from 'react-router-dom';
 import styled from "styled-components";
-import { getSellerProduct } from '../redux/modules/productSlice';
+
 //components
 import Nav from '../components/Nav'
 import SellerCenterItem from '../components/SellerCenterItem';
@@ -17,7 +16,6 @@ import { SellerProduct } from '../components/types/product';
 
 function SellerCenter() {
     const navigate = useNavigate();
-    const dispatch = useAppDispatch();
 
     // sellerProducts 가져오기.
     const { data: sellerProducts } = useQuery<SellerProduct[]>({
@@ -27,10 +25,6 @@ function SellerCenter() {
             return res.data.results
         }
     })
-
-    useEffect(() => {
-        dispatch(getSellerProduct())
-    }, [dispatch])
 
     return (
         <div>
