@@ -58,7 +58,7 @@ export const signInUser = createAsyncThunk(
             window.alert(`환영합니다 ${data.username}님 :)`)
             window.location.assign("/")
             console.log(res.data)
-            return thunkAPI.fulfillWithValue(res.data);;
+            return thunkAPI.fulfillWithValue(res.data);
         } catch (error: any) {
             window.alert(error.response.data.FAIL_Message)
             return thunkAPI.rejectWithValue(error.response.data);

@@ -10,6 +10,20 @@ const initialState: CartInit = {
     cartList: [],
 }
 
+// 장바구니 목록 불러오기
+export const getCartList = createAsyncThunk(
+    "cart/getCartList",
+    async () => {
+        try {
+            const res = await apis.getCart()
+            return res.data.results
+        } catch (error) {
+            console.log("장바구니에러", error);
+            throw error;
+        }
+    }
+)
+
 // 장바구니 개별 아이템
 export const getCartItem = createAsyncThunk(
     "cart/getCartItem",
@@ -73,6 +87,9 @@ const cartSlice = createSlice({
     reducers: {},
     extraReducers: (builder) => {
         builder
+            .addCase(getCartList.fulfilled, (state, action) => {
+                state.cartList = action.payload;
+            })
             .addCase(getCartItem.fulfilled, (state, action) => {
                 state.cartList = action.payload;
             })

@@ -21,10 +21,10 @@ const initialState: PropductInitProps = {
 // 상품 리스트 불러오기
 export const getProduct = createAsyncThunk(
     "product/getProduct",
-    async (page: number) => {
+    async (page: number, thunkAPI) => {
         try {
             const res = await apis.getProduct(page)
-            return { products: res.data.results, count: res.data.count };
+            return thunkAPI.fulfillWithValue({ products: res.data.results, count: res.data.count });
         } catch (error) {
             console.log("상품에러", error)
             throw error;
@@ -78,10 +78,10 @@ export const modifyProduct = createAsyncThunk(
 
 export const deleteProduct = createAsyncThunk(
     "product/deleteProduct",
-    async (productId: number) => {
+    async (productId: number, thunkAPI) => {
         try {
             const res = await apis.deleteProduct(productId);
-            return res.data;
+            return thunkAPI.fulfillWithValue(res.data);
         } catch (error) {
             console.log(error);
             throw error;
