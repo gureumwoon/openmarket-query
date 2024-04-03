@@ -23,8 +23,8 @@ api.interceptors.request.use((config: any) => {
 export const apis = {
     // user
     signUp: (data: UserSignUp) => api.post("accounts/signup/", data),
-    userNameDupcheck: (data: string) => api.post("accounts/signup/valid/username/", data),
-    companyNumCheck: (data: string) => api.post("accounts/signup/valid/company_registration_number/", data),
+    userNameDupcheck: (username: { username: string }) => api.post('/accounts/signup/valid/username/', username),
+    companyNumCheck: (data: { company_registration_number: string }) => api.post("accounts/signup/valid/company_registration_number/", data),
     signIn: (data: UserLogin) => api.post("accounts/login/", data),
     signOut: () => api.post("accounts/logout/"),
     // seller-user
