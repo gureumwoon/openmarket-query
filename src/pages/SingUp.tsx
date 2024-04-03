@@ -11,12 +11,10 @@ import Hodu from "../assets/images/Logo-hodu15.png";
 import arrowUp from "../assets/images/icon-up-arrow.svg";
 import pwCheckOn from "../assets/images/icon-check-on.svg";
 import pwCheckOff from "../assets/images/icon-check-off.svg";
-import { signUpSeller, signUpUser } from '../redux/modules/userSlice';
-import { useAppDispatch } from '../hooks/reduxHooks';
 import { SellerSignUp, UserSignUp } from '../components/types/user';
+import { useMutation } from '@tanstack/react-query';
 
 function SignUp() {
-    const dispatch = useAppDispatch();
     const navigate = useNavigate();
 
     const [tab, setTab] = useState(0)
@@ -91,6 +89,13 @@ function SignUp() {
     const [salesIsBin, setSalesIsBin] = useState(false)
     const [salesIsStoreName, setSalesIsStoreName] = useState(false)
 
+    const signUpUser = useMutation({
+        mutationFn: (signUpData: UserSignUp) => apis.signUp(signUpData)
+    })
+    const sellerSignUpUser = useMutation({
+        mutationFn: (signUpData: SellerSignUp) => apis.sellerSignUp(signUpData)
+    })
+
     // 전화번호 입력 dropdown
     const hadnleArrow = () => {
         setDropDown(!dropdown)
@@ -136,7 +141,7 @@ function SignUp() {
     const dupCheck = () => {
         const userName = tab === 0 ? id : sellerId
 
-        apis.userNameDupcheck(userName)
+        apis.userNameDupcheck({ username: userName })
             .then((res) => {
                 tab === 0 ?
                     setIdMessage(res.data.Success) :
@@ -437,7 +442,7 @@ function SignUp() {
     // 사업자 번호 중복 체크
     const handleComNumCheck = () => {
         const companyNumberData = bin
-        apis.companyNumCheck(companyNumberData)
+        apis.companyNumCheck({ company_registration_number: companyNumberData })
             .then((res) => {
                 setSalesBinMessage(res.data.Success)
             })
@@ -525,7 +530,9 @@ function SignUp() {
                 phone_number: phoneData,
                 name: name,
             };
-            dispatch(signUpUser(signupData))
+            signUpUser.mutate(signupData, {
+                onSuccess: () => navigate('/login')
+            })
         } else {
             if (isCheck === false) {
                 window.alert("아이디 중복확인을 해주세요.")
@@ -545,7 +552,9 @@ function SignUp() {
                 company_registration_number: isCoNumCheck === true ? bin : "",
                 store_name: storeName,
             }
-            dispatch(signUpSeller(signupData))
+            sellerSignUpUser.mutate(signupData, {
+                onSuccess: () => navigate('/login')
+            })
         }
     }
 
