@@ -8,7 +8,7 @@ interface SearchGridProps {
 function SearchGrid({ searchList }: SearchGridProps) {
     return (
         <Container>
-            {searchList.map((p) => {
+            {searchList?.map((p) => {
                 return <div key={p.product_id}>
                     <img src={p.image} alt="" />
                     <p className='product-name'>{p.store_name}</p>
