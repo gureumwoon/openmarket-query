@@ -5,6 +5,14 @@ import { apis } from "../shared/api";
 export default function useProducts(finalId?: number) {
     const queryClient = useQueryClient();
 
+    const getTotalCount = useQuery({
+        queryKey: ['totalCount'],
+        queryFn: async () => {
+            const response = await apis.getProduct(1)
+            return response.data.count;
+        }
+    })
+
     const getProducts = useInfiniteQuery<Product[]>({
         queryKey: ['products'],
         queryFn: async ({ pageParam = 1 }) => { // pageParam의 형식을 직접 지정
@@ -27,5 +35,5 @@ export default function useProducts(finalId?: number) {
         enabled: !!finalId // finalId가 존재하는 경우에만 쿼리를 활성화
     })
 
-    return { getProducts, getProductItem }
+    return { getTotalCount, getProducts, getProductItem }
 }
