@@ -2,7 +2,7 @@ import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-quer
 import { Product } from "../components/types/product";
 import { apis } from "../shared/api";
 
-export default function useProducts() {
+export default function useProducts(finalId?: number) {
     const queryClient = useQueryClient();
 
     const getProducts = useInfiniteQuery<Product[]>({
@@ -18,5 +18,14 @@ export default function useProducts() {
         initialPageParam: 1
     })
 
-    return { getProducts }
+    const getProductItem = useQuery({
+        queryKey: ['product', finalId],
+        queryFn: async () => {
+            const res = await apis.getOneProduct(finalId)
+            return res.data
+        },
+        enabled: !!finalId // finalId가 존재하는 경우에만 쿼리를 활성화
+    })
+
+    return { getProducts, getProductItem }
 }
