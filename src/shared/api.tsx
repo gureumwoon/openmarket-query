@@ -31,7 +31,7 @@ export const apis = {
     sellerSignUp: (data: SellerSignUp) => api.post("accounts/signup_seller/", data),
     // product
     getProduct: (page: number) => api.get(`products/?page=${page}`),
-    getOneProduct: (id: number) => api.get(`products/${id}/`),
+    getOneProduct: (id?: number) => api.get(`products/${id}/`),
     addProduct: (data: FormData) => api.post("products/", data),
     getSellerProduct: () => api.get("seller/"),
     deleteProduct: (id: number) => api.delete(`products/${id}/`),
