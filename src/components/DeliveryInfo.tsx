@@ -1,6 +1,4 @@
-import { useAppDispatch } from '../hooks/reduxHooks';
 import { useState } from 'react'
-import { addPayment } from '../redux/modules/paymentSlice';
 import styled from "styled-components";
 import { Address } from 'react-daum-postcode';
 import { PaymentItem } from './types/product';
@@ -9,6 +7,8 @@ import PostCodeModal from './PostCode';
 //element
 import Input from '../elements/Input';
 import Button from '../elements/Button';
+import { useMutation } from '@tanstack/react-query';
+import { apis } from '../shared/api';
 
 interface PaymentProps {
     shipping_fee: number;
@@ -21,8 +21,6 @@ interface PaymentProps {
 
 function DeliveryInfo(props: PaymentProps) {
     const { shipping_fee, price, product_id, quantity, order_kind } = props;
-
-    const dispatch = useAppDispatch();
 
     const [orderer, setOrderer] = useState("");
     const [orderPhone, setOrderPhone] = useState("");
@@ -44,6 +42,17 @@ function DeliveryInfo(props: PaymentProps) {
     const fullPhoneNum = phone ?? '' + phone2 ?? '' + phone3 ?? '';
     const fullAddress = address ?? '' + detailAddress ?? '';
     const sumPrice = price + shipping_fee
+
+    const addPayment = useMutation({
+        mutationFn: async (data: PaymentItem) => {
+            const res = await apis.directOrder(data)
+            return res.data
+        },
+        onError: (error) => {
+            console.log("바로구매에러", error)
+            throw error;
+        }
+    })
 
     const handlePostCode = () => {
         setIsOpen(!isOpen)
@@ -86,7 +95,7 @@ function DeliveryInfo(props: PaymentProps) {
             payment_method: paymentMethod,
             total_price: props.order_kind === "cart_one_order" || "direct_order" ? sumPrice : sumPrice + (props.difference ?? 0)
         }
-        dispatch(addPayment(data))
+        addPayment.mutate(data)
     }
 
     return (
