@@ -11,6 +11,7 @@ import Button from '../elements/Button';
 import DeleteIcon from '../assets/images/icon-delete.svg';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apis } from '../shared/api';
+import useProducts from '../hooks/useProducts';
 
 function ShoppingCart() {
     const [checkList, setCheckList] = useState([])
@@ -23,13 +24,7 @@ function ShoppingCart() {
     const isLogin = localStorage.getItem("token")
 
     // totalCoutn data 가져오기.
-    const { data: totalCount } = useQuery({
-        queryKey: ['totalCount'],
-        queryFn: async () => {
-            const response = await apis.getProduct(1)
-            return response.data.count;
-        }
-    })
+    const { getTotalCount: { data: totalCount } } = useProducts()
 
     // totalPage 계산.
     const totalPage = Math.ceil(totalCount / 15);
