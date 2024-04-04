@@ -1,27 +1,13 @@
 import { useNavigate } from 'react-router-dom';
 import styled from "styled-components";
 import useInfiniteScroll from '../hooks/use-infinitescroll';
-import { apis } from '../shared/api';
-import { Product } from './types/product';
 import LazyLoadingImage from './LazyLoading';
 import PlaceholderImg from '../assets/images/placeholderImg.svg';
-import { useInfiniteQuery } from '@tanstack/react-query';
+import useProducts from '../hooks/useProducts';
 
 function MainGrid() {
     const navigate = useNavigate()
-
-    const { data, fetchNextPage, hasNextPage } = useInfiniteQuery<Product[], Error>({
-        queryKey: ['products'],
-        queryFn: async ({ pageParam = 1 }) => { // pageParam의 형식을 직접 지정
-            const response = await apis.getProduct(pageParam as number);
-            return response.data.results;
-        },
-        getNextPageParam: (lastPage, pages): number | false => {
-            const nextPage = pages.length + 1;
-            return lastPage?.length === 0 ? false : nextPage;
-        },
-        initialPageParam: 1
-    });
+    const { getProducts: { data, fetchNextPage, hasNextPage } } = useProducts();
 
     const target = useInfiniteScroll({
         hasNextPage,
