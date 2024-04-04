@@ -3,10 +3,8 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter } from "react-router-dom";
-import { Provider } from "react-redux";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import store from "./redux/configStore";
 import ScrollToTop from './components/ScrollToTop';
 
 const queryClient = new QueryClient()
@@ -14,14 +12,12 @@ const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 root.render(
   <>
     <QueryClientProvider client={queryClient}>
-      <Provider store={store}>
-        <BrowserRouter>
-          <ScrollToTop>
-            <App />
-            <ReactQueryDevtools initialIsOpen={true} />
-          </ScrollToTop>
-        </BrowserRouter>
-      </Provider>
+      <BrowserRouter>
+        <ScrollToTop>
+          <App />
+          <ReactQueryDevtools initialIsOpen={true} />
+        </ScrollToTop>
+      </BrowserRouter>
     </QueryClientProvider>
   </>
 );
