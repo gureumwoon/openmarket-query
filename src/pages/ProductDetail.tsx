@@ -12,6 +12,7 @@ import ModalPortal from '../helpers/Portal';
 import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
 import { apis } from '../shared/api';
 import { AddCart, CartDetail } from '../components/types/product';
+import useProducts from '../hooks/useProducts';
 
 function ProductDetail() {
     const { id } = useParams();
@@ -29,15 +30,10 @@ function ProductDetail() {
     const tabMenu = ["버튼", "리뷰", "Q&A", "반품/교환정보"]
     const itemDupCheck = true;
 
+    const { getProductItem: { data: product } } = useProducts(finalId)
+
     const results = useQueries({
         queries: [
-            {
-                queryKey: ['product', finalId],
-                queryFn: async () => {
-                    const res = await apis.getOneProduct(finalId)
-                    return res.data
-                },
-            },
             {
                 queryKey: ['cartList'],
                 queryFn: async () => {
@@ -48,10 +44,8 @@ function ProductDetail() {
         ]
     })
 
-    const productQuery = results[0];
-    const cartQuery = results[1];
+    const cartQuery = results[0];
 
-    const product = productQuery.isLoading ? null : productQuery.data;
     const carts = cartQuery.isLoading ? null : cartQuery.data;
 
     interface CustomError extends Error {
