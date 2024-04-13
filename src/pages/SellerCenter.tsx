@@ -9,22 +9,12 @@ import SellerCenterItem from '../components/SellerCenterItem';
 import Button from '../elements/Button';
 //assets
 import PlusIcon from "../assets/images/icon-plus.svg";
-import { useQuery } from '@tanstack/react-query';
-import { apis } from '../shared/api';
-import { SellerProduct } from '../components/types/product';
+import { productQuery } from '../hooks/useProductQuery';
 
 
 function SellerCenter() {
     const navigate = useNavigate();
-
-    // sellerProducts 가져오기.
-    const { data: sellerProducts } = useQuery<SellerProduct[]>({
-        queryKey: ['sellerProducts'],
-        queryFn: async () => {
-            const res = await apis.getSellerProduct()
-            return res.data.results
-        }
-    })
+    const { data: sellerProducts } = productQuery.useGetSellerProducts()
 
     return (
         <div>
