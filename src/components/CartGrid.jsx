@@ -9,46 +9,20 @@ import MinusIcon from "../assets/images/minus-icon_2.svg";
 import PlusIcon from "../assets/images/plus-icon_2.svg";
 import DeleteIcon from '../assets/images/icon-delete.svg';
 import ModalPortal from '../helpers/Portal';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apis } from '../shared/api';
+import { cartQuery } from '../hooks/useCartQuery';
 
 function CartGrid(props) {
-    const { cart_sum_grid, sum, shippingFeeSum, onChange, checked, isCheck, refetchCartList } = props;
+    const { cart_sum_grid, sum, shippingFeeSum, onChange, checked, isCheck } = props;
     const navigate = useNavigate();
-    const queryClient = useQueryClient();
 
     const [modal, setModal] = useState(0);
     const [itemId, setItemId] = useState("");
     const [count, setCount] = useState(props.quantityList)
 
     // cartItem 삭제하기
-    const deleteCartItem = useMutation({
-        mutationFn: async (itemId) => {
-            const res = apis.deleteItem(itemId)
-            return res.data
-        },
-        onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: ['cartList'] });
-            await refetchCartList()
-        }
-    })
-
+    const deleteCartItem = cartQuery.useDeleteCartItem()
     // cartItem 수정하기
-    const modifyCartItem = useMutation({
-        mutationFn: async ({ cartItemId, itemData }) => {
-            const res = await apis.modifyQuantity(cartItemId, itemData)
-            return res.data
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['cartList'] })
-        },
-        onError: (error) => {
-            console.log("장바구니에러", error);
-            throw error;
-        }
-    })
-
-    console.log("modifyCartItem", modifyCartItem)
+    const modifyCartItem = cartQuery.useModifyCartItem()
 
     const cartToPayment = () => {
         if (props.is_active === true && isCheck === true) {
@@ -181,7 +155,6 @@ function CartGrid(props) {
                                             quantity: count,
                                             is_active: true, //isCheck,
                                         }
-                                        console.log("itemData", itemData)
                                         modifyCartItem.mutate({ cartItemId: props.cart_item_id, itemData })
                                         setModal(0)
                                     }}
