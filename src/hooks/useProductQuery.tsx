@@ -2,7 +2,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { apis } from "../shared/api";
 import { Product, ProductDetail, SellerProduct } from "../components/types/product";
 
-export const createQuery = {
+export const productQuery = {
     useGetProducts: () =>
         useInfiniteQuery<Product[]>({
             queryKey: ['products'],
