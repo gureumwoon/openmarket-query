@@ -12,9 +12,8 @@ import UploadBg from "../assets/images/product-basic-img.png";
 //elements
 import { comma, unComma } from '../elements/Comma';
 import { S3Client, S3ClientConfig, PutObjectCommand } from "@aws-sdk/client-s3";
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { apis } from '../shared/api';
 import { SellerProduct } from '../components/types/product';
+import { productQuery } from '../hooks/useProductQuery';
 
 function Upload() {
     const navigate = useNavigate();
@@ -22,54 +21,18 @@ function Upload() {
     const fileInput = useRef<HTMLInputElement | null>(null);
     const image = useRef(null);
     const isId = id ? true : false;
-    const { data: sellerProducts } = useQuery({
-        queryKey: ['sellerProducts'],
-        queryFn: async () => {
-            const res = await apis.getSellerProduct()
-            return res.data.results
-        }
-    })
+    const { data: sellerProducts = [] } = productQuery.useGetSellerProducts()
     const modifyItem = sellerProducts?.filter((s: SellerProduct) => s.product_id === Number(id))
     const token = localStorage.getItem("token")
-    const queryClient = useQueryClient();
 
-    const [productName, setProductName] = useState(isId ? modifyItem[0]?.product_name : "");
-    const [productPrice, setProductPrice] = useState(isId ? modifyItem[0]?.price : "");
-    const [attachment, setAttachment] = useState(isId ? modifyItem[0]?.image : "");
-    // const [encodImage, setEncodImage] = useState("");
-    const [shippingCheck, setShippingCheck] = useState(isId ? modifyItem[0]?.shipping_method === "DELIVERY" ? false : true : false);
-    const [shippingFee, setShippingFee] = useState(isId ? modifyItem[0]?.shipping_fee : "");
-    const [productStock, setProductStock] = useState(isId ? modifyItem[0]?.stock : "")
-
-    // product upload하기.
-    const uploadProduct = useMutation({
-        mutationFn: async (formData: FormData) => {
-            const res = await apis.addProduct(formData)
-            return res.data.results
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['products'] })
-        },
-        onError: (error) => {
-            console.log("상품업로드에러", error)
-            throw error;
-        }
-    })
-
-    // product 수정하기.
-    const modifyProduct = useMutation({
-        mutationFn: async ({ id, data }: { id: number, data: FormData }) => {
-            const res = await apis.modifyProduct(id, data);
-            return res.data
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['products'] })
-        },
-        onError: (error) => {
-            console.log("상품수정에러", error);
-            throw error;
-        }
-    })
+    const [productName, setProductName] = useState(isId ? modifyItem[0].product_name : "");
+    const [productPrice, setProductPrice] = useState(isId ? modifyItem[0].price : "");
+    const [attachment, setAttachment] = useState(isId ? modifyItem[0].image : "");
+    const [shippingCheck, setShippingCheck] = useState(isId ? modifyItem[0].shipping_method === "DELIVERY" ? false : true : false);
+    const [shippingFee, setShippingFee] = useState(isId ? modifyItem[0].shipping_fee : "");
+    const [productStock, setProductStock] = useState(isId ? modifyItem[0].stock : "")
+    const uploadProduct = productQuery.useUploadProduct();
+    const modifyProduct = productQuery.useModifyProduct()
 
     const handleProductName = (e: React.ChangeEvent<HTMLInputElement>) => {
         setProductName(e.target.value)
