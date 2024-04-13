@@ -3,12 +3,11 @@ import styled from "styled-components";
 import useInfiniteScroll from '../hooks/use-infinitescroll';
 import LazyLoadingImage from './LazyLoading';
 import PlaceholderImg from '../assets/images/placeholderImg.svg';
-import useProducts from '../hooks/useProducts';
+import { productQuery } from '../hooks/useProductQuery';
 
 function MainGrid() {
     const navigate = useNavigate()
-    const { getProducts: { data, fetchNextPage, hasNextPage } } = useProducts();
-
+    const { data, hasNextPage, fetchNextPage } = productQuery.useGetProducts();
     const target = useInfiniteScroll({
         hasNextPage,
         fetchNextPage,
