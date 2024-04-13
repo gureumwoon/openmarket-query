@@ -11,7 +11,7 @@ import Button from '../elements/Button';
 import DeleteIcon from '../assets/images/icon-delete.svg';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apis } from '../shared/api';
-import useProducts from '../hooks/useProducts';
+import { productQuery } from '../hooks/useProductQuery';
 
 function ShoppingCart() {
     const [checkList, setCheckList] = useState([])
@@ -23,27 +23,8 @@ function ShoppingCart() {
     const location = useLocation();
     const isLogin = localStorage.getItem("token")
 
-    // totalCoutn data 가져오기.
-    const { getTotalCount: { data: totalCount } } = useProducts()
-
-    // totalPage 계산.
-    const totalPage = Math.ceil(totalCount / 15);
-
-    // 페이지별로 데이터 가져오기.
-    const { data: productList } = useQuery({
-        queryKey: ['allProduct'],
-        queryFn: async () => {
-            const promises = [];
-            for (let page = 1; page <= totalPage; page++) {
-                promises.push(apis.getProduct(page))
-            }
-            const res = await Promise.all(promises);
-            const products = res.flatMap(response => response.data.results);
-            console.log(products)
-            return products;
-        },
-        enabled: totalPage > 0,
-    })
+    // 페이지별 데이터 한번에 가져오기.
+    const { data: productList } = productQuery.useGetProductList()
 
     // cartList 가져오기.
     const { data: carts, refetch: refetchCartList } = useQuery({
