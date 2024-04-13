@@ -9,10 +9,9 @@ import UserModal from '../components/UserModal';
 import Button from '../elements/Button';
 //helpers
 import ModalPortal from '../helpers/Portal';
-import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
-import { apis } from '../shared/api';
-import { AddCart, CartDetail } from '../components/types/product';
+import { CartDetail } from '../components/types/product';
 import { productQuery } from '../hooks/useProductQuery';
+import { cartQuery } from '../hooks/useCartQuery';
 
 function ProductDetail() {
     const { id } = useParams();
@@ -21,7 +20,6 @@ function ProductDetail() {
     const navigate = useNavigate()
     const isLogin = localStorage.getItem("token")
     const userType = localStorage.getItem("type")
-    const queryClient = useQueryClient();
 
     const [quantity, setQuantity] = useState(1)
     const [modal, setModal] = useState(0);
@@ -30,49 +28,13 @@ function ProductDetail() {
     const tabMenu = ["버튼", "리뷰", "Q&A", "반품/교환정보"]
     const itemDupCheck = true;
     const { data: product } = productQuery.useGetProductItem(finalId)
-
-    const results = useQueries({
-        queries: [
-            {
-                queryKey: ['cartList'],
-                queryFn: async () => {
-                    const res = await apis.getCart()
-                    return res.data.results
-                }
-            }
-        ]
-    })
-
-    const cartQuery = results[0];
-
-    const carts = cartQuery.isLoading ? null : cartQuery.data;
-
-    interface CustomError extends Error {
-        response?: any;
-    }
-
+    const { data: cartList } = cartQuery.useGetCart()
     const itemData = {
         product_id: (product?.product_id ?? 0),
         quantity: quantity,
         check: itemDupCheck
     }
-    const addCartItem = useMutation<AddCart, CustomError, AddCart>({
-        mutationFn: async () => {
-            const res = await apis.addCart(itemData)
-            return res.data
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['cartList'] })
-            setModal(3)
-        },
-        onError: (error) => {
-            console.log("장바구니에러", error);
-            if (error.response.status === 406) {
-                window.alert(error.response.data.FAIL_message);
-            }
-            throw error;
-        }
-    })
+    const addCartItem = cartQuery.useAddCartItem(itemData)
 
 
     const handleMinus = () => {
@@ -108,16 +70,20 @@ function ProductDetail() {
     }
 
     const handleAddCart = () => {
-        const cartItem = carts?.find((c: CartDetail) => c.product_id === finalId)
-        const cartItemId = carts?.map((c: CartDetail) => c.product_id)
+        const cartItem = cartList?.find((c: CartDetail) => c.product_id === finalId)
+        const cartItemId = cartList?.map((c: CartDetail) => c.product_id)
         if (!isLogin) {
             setModal(2)
         }
         if (cartItemId?.includes(product?.product_id ?? 0) && (cartItem?.quantity ?? 0) + quantity <= (product?.stock ?? 0)) {
             setModal(1)
         }
-        else if (carts === null || !cartItemId?.includes(product?.product_id ?? 0) || (cartItem?.quantity ?? 0) + quantity > (product?.stock ?? 0)) {
-            addCartItem.mutate(itemData)
+        else if (cartList === null || !cartItemId?.includes(product?.product_id ?? 0) || (cartItem?.quantity ?? 0) + quantity > (product?.stock ?? 0)) {
+            addCartItem.mutate(itemData, {
+                onSuccess: () => {
+                    setModal(3)
+                }
+            })
         }
     }
 
