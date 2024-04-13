@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import styled from "styled-components";
 import UserModal from './UserModal';
 import Button from '../elements/Button';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { apis } from '../shared/api';
+import { productQuery } from '../hooks/useProductQuery';
 
 interface SellerItem {
     image: string;
@@ -16,17 +15,8 @@ interface SellerItem {
 
 function SellerCenterItem(props: SellerItem) {
     const navigate = useNavigate();
-    const queryClient = useQueryClient();
     const [modal, setModal] = useState(0);
-
-    const deleteProduct = useMutation({
-        mutationFn: async (productId: number) => {
-            await apis.deleteProduct(productId)
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['sellerProducts'] })
-        }
-    })
+    const deleteProduct = productQuery.useDeleteProduct()
 
     return (
         <Item>
