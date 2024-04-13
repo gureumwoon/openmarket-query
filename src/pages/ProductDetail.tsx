@@ -12,7 +12,7 @@ import ModalPortal from '../helpers/Portal';
 import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query';
 import { apis } from '../shared/api';
 import { AddCart, CartDetail } from '../components/types/product';
-import useProducts from '../hooks/useProducts';
+import { productQuery } from '../hooks/useProductQuery';
 
 function ProductDetail() {
     const { id } = useParams();
@@ -29,8 +29,7 @@ function ProductDetail() {
 
     const tabMenu = ["버튼", "리뷰", "Q&A", "반품/교환정보"]
     const itemDupCheck = true;
-
-    const { getProductItem: { data: product } } = useProducts(finalId)
+    const { data: product } = productQuery.useGetProductItem(finalId)
 
     const results = useQueries({
         queries: [
