@@ -9,15 +9,13 @@ import Footer from '../components/Footer';
 // Element
 import Button from '../elements/Button';
 import DeleteIcon from '../assets/images/icon-delete.svg';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { apis } from '../shared/api';
 import { productQuery } from '../hooks/useProductQuery';
+import { cartQuery } from '../hooks/useCartQuery';
 
 function ShoppingCart() {
     const [checkList, setCheckList] = useState([])
-    const [modal, setModal] = useState(0);
+    const [, setModal] = useState(0);
     const [isCheck, setIsCheck] = useState(false)
-    const queryClient = useQueryClient();
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -25,38 +23,12 @@ function ShoppingCart() {
 
     // 페이지별 데이터 한번에 가져오기.
     const { data: productList } = productQuery.useGetProductList()
-
     // cartList 가져오기.
-    const { data: carts, refetch: refetchCartList } = useQuery({
-        queryKey: ['cartList'],
-        queryFn: async () => {
-            const res = await apis.getCart()
-            return res.data.results
-        }
-    })
-
+    const { data: carts, refetch: refetchCartList } = cartQuery.useGetCart()
     // cartList 삭제하기
-    const deleteCartList = useMutation({
-        mutationFn: async () => {
-            return await apis.deleteAllItem();
-        },
-        onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: ['cartList'] });
-            await refetchCartList();
-        },
-    })
-
+    const deleteCartList = cartQuery.useDeleteCartList()
     // cartItem 삭제하기
-    const deleteCartItem = useMutation({
-        mutationFn: async (itemId) => {
-            const res = apis.deleteItem(itemId)
-            return res.data
-        },
-        onSuccess: async () => {
-            await queryClient.invalidateQueries({ queryKey: ['cartList'] });
-            await refetchCartList();
-        }
-    })
+    const deleteCartItem = cartQuery.useDeleteCartItem()
 
     const quantityList = carts?.map((q) => q.quantity)
     const cartId = carts?.map((c) => c.product_id)
