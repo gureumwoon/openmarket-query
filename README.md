@@ -8,7 +8,7 @@
 
 👉 [호두마켓 API](https://paullabworkspace.notion.site/API-7b57a2b656fd4e3790a6a360b69aa3ad#a9e0fdb06e37448f9d80c49777200dc4)
 
-👉 [호두마켓 바로가기](https://hodu-madeby-gureum.netlify.app)
+👉 [호두마켓 바로가기](https://hodumarket.shop/)
 #### 구매자 계정
 - 테스트 아이디: test1223
 - 테스트 패스워드: test1223^^
