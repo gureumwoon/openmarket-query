@@ -22,7 +22,7 @@ jobs:
               ${{ runner.os }}-build-
               ${{ runner.os }}-
 
-         # 3 - 의존성 패키지 설치
+         # 3 - 의존성 패키지 설치.
       - name: Install Dependencies 
         if: steps.cache.outputs.cache-hit != 'true'
         run: npm install
