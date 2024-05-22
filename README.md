@@ -8,7 +8,7 @@
 
 👉 [호두마켓 API](https://paullabworkspace.notion.site/API-7b57a2b656fd4e3790a6a360b69aa3ad#a9e0fdb06e37448f9d80c49777200dc4)
 
-👉 [호두마켓 바로가기](https://hodu-madeby-gureum.netlify.app)
+👉 [호두마켓 바로가기](https://hodumarket.shop/)
 #### 구매자 계정
 - 테스트 아이디: test1223
 - 테스트 패스워드: test1223^^
@@ -26,10 +26,13 @@
 <div align=center>
 <img src="https://img.shields.io/badge/Axios-5A29E4?style=for-the-badge&logo=Axios&logoColor=white">
 <img src="https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=React&logoColor=black">
-<img src="https://img.shields.io/badge/Redux-764ABC?style=for-the-badge&logo=Redux&logoColor=white">
+<img src="https://img.shields.io/badge/React Query-FF4154?style=for-the-badge&logo=React Query&logoColor=white">
 <img src="https://img.shields.io/badge/styled components-DB7093?style=for-the-badge&logo=styled-components&logoColor=white">
 <img src="https://img.shields.io/badge/Typescript-3178C6?style=for-the-badge&logo=Typescript&logoColor=white">
 <img src="https://img.shields.io/badge/React Router-CA4245?style=for-the-badge&logo=React Router&logoColor=white">
+<img src="https://img.shields.io/badge/amazons3-569A31?style=for-the-badge&logo=amazons3&logoColor=white">
+<img src="https://img.shields.io/badge/amazoncloudfront-FF4F8B?style=for-the-badge&logo=amazoncloudfront&logoColor=white">
+<img src="https://img.shields.io/badge/amazonroute53-8C4FFF?style=for-the-badge&logo=amazonroute53&logoColor=white">
 </div>
 
 <br />
