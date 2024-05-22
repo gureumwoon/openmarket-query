@@ -29,7 +29,7 @@ jobs:
 
         # 4 - 빌드
       - name: Build
-        run: npm run build
+        run: CI='false' npm run build
 
         # 5 - aws에 접근하기 위한 권한을 받아옵니다.
       - name: Configure AWS credentials
