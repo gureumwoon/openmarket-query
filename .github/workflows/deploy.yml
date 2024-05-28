@@ -27,11 +27,17 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: npm install
 
-        # 4 - 빌드
+        # 4 - 환경 변수 설정
+      - name: Set environment variables
+        run: |
+            touch .env
+            echo "REACT_APP_API=${{ secrets.REACT_APP_API }}" >> .env
+
+        # 5 - 빌드
       - name: Build
         run: CI='false' npm run build
 
-        # 5 - aws에 접근하기 위한 권한을 받아옵니다.
+        # 6 - aws에 접근하기 위한 권한을 받아옵니다.
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -39,10 +45,10 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SCRET_ACCESS_KEY }}
           aws-region: ${{secrets.AWS_DEFAULT_REGION}}
 
-          #6 - S3에 build 파일 배포.
+        # 7 - S3에 build 파일 배포.
       - name: Deploy to S3
         run: aws s3 sync ./build s3://${{ secrets.AWS_BUCKET_NAME }}
 
-        # 7 - CloudFront 캐시 무효화.
+        # 8 - CloudFront 캐시 무효화.
       - name: CloudFront Invalidation
         run: aws cloudfront create-invalidation --distribution-id ${{ secrets.AWS_CLOUDFRONT_ID }} --paths "/*"
