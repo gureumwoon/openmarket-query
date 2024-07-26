@@ -1,0 +1,55 @@
+name: Build
+on:
+  push:
+    branches:
+      - main #빌드하고싶은 브랜치
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+         # 1 - 소스코드 복사.
+      - name: Check out repository code
+        uses: actions/checkout@main
+
+        # 2 - node_modules 캐싱
+      - name: Cache node modules
+        id: cache-npm
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-build-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+              ${{ runner.os }}-build-
+              ${{ runner.os }}-
+
+         # 3 - 의존성 패키지 설치.
+      - name: Install Dependencies 
+        if: steps.cache-npm.outputs.cache-hit != 'true'
+        run: npm install
+
+        # 4 - 환경 변수 설정
+      - name: Set environment variables
+        run: |
+            touch .env
+            echo "REACT_APP_API=${{ secrets.REACT_APP_API }}" >> .env
+
+        # 5 - 빌드
+      - name: Build
+        run: CI='false' npm run build
+
+        # 6 - aws에 접근하기 위한 권한을 받아옵니다.
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SCRET_ACCESS_KEY }}
+          aws-region: ${{secrets.AWS_DEFAULT_REGION}}
+
+        # 7 - S3에 build 파일 배포.
+      - name: Deploy to S3
+        run: aws s3 sync ./build s3://${{ secrets.AWS_BUCKET_NAME }}
+
+        # 8 - CloudFront 캐시 무효화.
+      - name: CloudFront Invalidation
+        run: aws cloudfront create-invalidation --distribution-id ${{ secrets.AWS_CLOUDFRONT_ID }} --paths "/*"
