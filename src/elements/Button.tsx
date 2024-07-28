@@ -32,6 +32,7 @@ interface ButtonProps {
 
 const Button = (props: ButtonProps) => {
     const {
+<<<<<<< HEAD
         children = null,
         src,
         display,
@@ -47,6 +48,23 @@ const Button = (props: ButtonProps) => {
         _onClick = () => { },
         _onClickMinus = () => { },
         _onClickPlus = () => { },
+=======
+        children,
+        src,
+        display,
+        width,
+        height,
+        bg,
+        margin,
+        padding,
+        font_size,
+        font_weight,
+        disabled,
+        active,
+        _onClick,
+        _onClickMinus,
+        _onClickPlus,
+>>>>>>> 63756ca2c98ecacd15570621f0e5b2c249444b91
         align,
         seller_nav_button,
         seller_tab_button,
@@ -103,6 +121,20 @@ const Button = (props: ButtonProps) => {
     )
 }
 
+<<<<<<< HEAD
+=======
+Button.defaultProps = {
+    children: null,
+    width: "100%",
+    margin: false,
+    padding: false,
+    _disabled: false,
+    _onClick: () => { },
+    _onClickMinus: () => { },
+    _onClickPlus: () => { },
+};
+
+>>>>>>> 63756ca2c98ecacd15570621f0e5b2c249444b91
 const Btn = styled.button<Partial<ButtonProps>>`
     cursor: pointer;
     width: ${(props) => props.width};

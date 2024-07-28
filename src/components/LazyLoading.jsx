@@ -40,7 +40,10 @@ export default function LazyLoadingImage({ src, alt, onError, onClick, placehold
             onError={onError || null}
             onClick={onClick}
             ref={target}
+<<<<<<< HEAD
             data-testid='lazy-image'
+=======
+>>>>>>> 63756ca2c98ecacd15570621f0e5b2c249444b91
         />
 
     )

@@ -8,7 +8,6 @@ import { productQuery } from '../hooks/useProductQuery';
 function MainGrid() {
     const navigate = useNavigate()
     const { data, hasNextPage, fetchNextPage } = productQuery.useGetProducts();
-    console.log('productQuery', productQuery.useGetProducts())
     const target = useInfiniteScroll({
         hasNextPage,
         fetchNextPage,

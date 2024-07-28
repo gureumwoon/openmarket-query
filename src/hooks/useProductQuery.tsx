@@ -8,7 +8,6 @@ export const productQuery = {
             queryKey: ['products'],
             queryFn: async ({ pageParam = 1 }) => {
                 const response = await apis.getProduct(pageParam as number);
-                console.log('response', response)
                 return response.data.results;
             },
             getNextPageParam: (lastPage, pages): number | false => {
