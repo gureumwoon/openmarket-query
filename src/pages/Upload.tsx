@@ -11,11 +11,7 @@ import UploadIcon from "../assets/images/icon-img.svg";
 import UploadBg from "../assets/images/product-basic-img.png";
 //elements
 import { comma, unComma } from '../elements/Comma';
-<<<<<<< HEAD
 import { S3Client, S3ClientConfig, PutObjectCommand, ObjectCannedACL } from "@aws-sdk/client-s3";
-=======
-import { S3Client, S3ClientConfig, PutObjectCommand } from "@aws-sdk/client-s3";
->>>>>>> 63756ca2c98ecacd15570621f0e5b2c249444b91
 import { SellerProduct } from '../components/types/product';
 import { productQuery } from '../hooks/useProductQuery';
 
@@ -127,11 +123,7 @@ function Upload() {
                 Bucket: s3Bucket,
                 Key: `dev/${fileName}`, // 'dev' 폴더에 업로드
                 Body: file,
-<<<<<<< HEAD
                 ACL: 'public-read' as ObjectCannedACL, // 이미지를 공개로 설정
-=======
-                ACL: 'public-read', // 이미지를 공개로 설정
->>>>>>> 63756ca2c98ecacd15570621f0e5b2c249444b91
                 ContentType: 'image/jpeg',
             };
 

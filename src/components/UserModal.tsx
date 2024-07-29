@@ -38,11 +38,7 @@ function UserModal(props: ModalProps) {
                         _disabled ?
                             null
                             :
-<<<<<<< HEAD
                             <Button quantity_button children={children} disabled={_disabled} display={display} _onClickMinus={_onClickMinus} _onClickPlus={_onClickPlus} />
-=======
-                            <Button quantity_button children={children} _disabled={_disabled} display={display} _onClickMinus={_onClickMinus} _onClickPlus={_onClickPlus} />
->>>>>>> 63756ca2c98ecacd15570621f0e5b2c249444b91
                     }
                     <img className="delete-btn" src={DeleteIcon} alt="" onClick={_onClick} />
                     <BtnContainer margin={margin}>
