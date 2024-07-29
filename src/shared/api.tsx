@@ -14,7 +14,7 @@ export const api: AxiosInstance = axios.create({
 api.interceptors.request.use((config: any) => {
     const jwtToken = localStorage.getItem("token");
     if (jwtToken !== undefined) {
-        config.headers.common["authorization"] = jwtToken ? `JWT ${jwtToken}` : "";
+        config.headers["authorization"] = jwtToken ? `JWT ${jwtToken}` : "";
     }
     return config;
 });
